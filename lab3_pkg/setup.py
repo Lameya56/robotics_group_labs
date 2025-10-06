@@ -21,8 +21,9 @@ setup(
     entry_points={
         'console_scripts': [
 		'odom_logger = lab3_pkg.odom_logger:main',
-        	'plot_odom = lab3_pkg.plot_odom:main',
+        'plot_odom = lab3_pkg.plot_odom:main',
 		'compare_plot = lab3_pkg.compare_plot:main',
+        'pd_controller = lab3_pkg.pd_controller:main',
         ],
     },
 )
