@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
 		'odom_logger = lab3_pkg.odom_logger:main',
         	'plot_odom = lab3_pkg.plot_odom:main',
+		'compare_plot = lab3_pkg.compare_plot:main',
         ],
     },
 )

@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Twist
 from math import atan2
 import csv
 import os
@@ -12,7 +13,13 @@ def yaw_from_quaternion(qx, qy, qz, qw):
 class OdomLogger(Node):
     def __init__(self):
         super().__init__('odom_logger')
+	 # Subscribe to odometry
         self.sub = self.create_subscription(Odometry, '/odom', self.cb, 50)
+	# Subscribe to commanded velocities
+        self.cmd_sub = self.create_subscription(Twist, '/cmd_vel', self.cmd_cb, 50)
+
+        self.last_cmd_lin_x = 0.0
+        self.last_cmd_ang_z = 0.0
 
         # CSV file path (workspace root). Change if you'd like another location.
         self.csv_path = os.path.expanduser('~/ros2_ws/odom_log.csv')
@@ -24,7 +31,8 @@ class OdomLogger(Node):
         self.writer.writerow([
             't_sec', 'x', 'y', 'yaw',
             'lin_x', 'lin_y', 'lin_z',
-            'ang_x', 'ang_y', 'ang_z'
+            'ang_x', 'ang_y', 'ang_z',
+            'cmd_lin_x', 'cmd_ang_z'
         ])
 
         self.start_time = None
@@ -51,8 +59,12 @@ class OdomLogger(Node):
         self.writer.writerow([
             f"{t_rel:.3f}", f"{x:.4f}", f"{y:.4f}", f"{yaw:.4f}",
             f"{lin.x:.4f}", f"{lin.y:.4f}", f"{lin.z:.4f}",
-            f"{ang.x:.4f}", f"{ang.y:.4f}", f"{ang.z:.4f}"
+            f"{ang.x:.4f}", f"{ang.y:.4f}", f"{ang.z:.4f}",
+	        f"{self.last_cmd_lin_x:.4f}", f"{self.last_cmd_ang_z:.4f}"
         ])
+    def cmd_cb(self, msg: Twist):
+        self.last_cmd_lin_x = msg.linear.x
+        self.last_cmd_ang_z = msg.angular.z
 
     def destroy_node(self):
         try:
