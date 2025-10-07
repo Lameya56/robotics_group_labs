@@ -17,8 +17,8 @@ def main():
 
     # Linear velocities
     plt.figure()
-    plt.plot(t, lin_cmd, 'r--', label='cmd_lin_x')
-    plt.plot(t, lin_odom, 'b-', label='odom_lin_x')
+    plt.plot(t, lin_cmd, 'r-', label='cmd_lin_x')
+    plt.plot(t, lin_odom, 'b--', label='odom_lin_x')
     plt.xlabel('Time (s)')
     plt.ylabel('Linear velocity (m/s)')
     plt.title('Linear Velocity Tracking')
@@ -27,8 +27,8 @@ def main():
 
     # Angular velocities
     plt.figure()
-    plt.plot(t, ang_cmd, 'r--', label='cmd_ang_z')
-    plt.plot(t, ang_odom, 'b-', label='odom_ang_z')
+    plt.plot(t, ang_cmd, 'r-', label='cmd_ang_z')
+    plt.plot(t, ang_odom, 'b--', label='odom_ang_z')
     plt.xlabel('Time (s)')
     plt.ylabel('Angular velocity (rad/s)')
     plt.title('Angular Velocity Tracking')

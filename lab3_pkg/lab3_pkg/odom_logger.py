@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, TwistStamped
 from math import atan2
 import csv
 import os
@@ -13,10 +13,10 @@ def yaw_from_quaternion(qx, qy, qz, qw):
 class OdomLogger(Node):
     def __init__(self):
         super().__init__('odom_logger')
-	 # Subscribe to odometry
+	    # Subscribe to odometry
         self.sub = self.create_subscription(Odometry, '/odom', self.cb, 50)
-	# Subscribe to commanded velocities
-        self.cmd_sub = self.create_subscription(Twist, '/cmd_vel', self.cmd_cb, 50)
+	    # Subscribe to commanded velocities
+        self.cmd_sub = self.create_subscription(TwistStamped, '/cmd_vel', self.cmd_cb, 50)
 
         self.last_cmd_lin_x = 0.0
         self.last_cmd_ang_z = 0.0
@@ -62,9 +62,10 @@ class OdomLogger(Node):
             f"{ang.x:.4f}", f"{ang.y:.4f}", f"{ang.z:.4f}",
 	        f"{self.last_cmd_lin_x:.4f}", f"{self.last_cmd_ang_z:.4f}"
         ])
-    def cmd_cb(self, msg: Twist):
-        self.last_cmd_lin_x = msg.linear.x
-        self.last_cmd_ang_z = msg.angular.z
+
+    def cmd_cb(self, msg: TwistStamped):
+        self.last_cmd_lin_x = msg.twist.linear.x
+        self.last_cmd_ang_z = msg.twist.angular.z
 
     def destroy_node(self):
         try:
