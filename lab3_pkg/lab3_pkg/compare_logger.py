@@ -13,7 +13,7 @@ class CompareLogger(Node):
     def __init__(self):
         super().__init__('compare_logger')
 
-        self.model_name = self.declare_parameter('model_name', '___FILL_ME___').value
+        self.model_name = self.declare_parameter('model_name', 'turtlebot3_burger').value
         # e.g., 'turtlebot3_burger' (check with: ros2 topic echo /gazebo/robot_description --once)
 
         self.odom = None
@@ -64,29 +64,27 @@ class CompareLogger(Node):
             t = self.get_clock().now().nanoseconds * 1e-9
             self.gt = (t, pose.position.x, pose.position.y, yaw)
 
-    
+    def tick(self):
+        if self.odom is None or self.filt is None:
+            return
 
-def tick(self):
-    	if self.odom is None or self.filt is None:
-        return
+        t = self.get_clock().now().nanoseconds * 1e-9
+        if self.t0 is None:
+            self.t0 = t
+        trel = t - self.t0
 
-    	t = self.get_clock().now().nanoseconds * 1e-9
-    	if self.t0 is None:
-        	self.t0 = t
-    	trel = t - self.t0
+        row = [f"{trel:.3f}"]
+        row += [f"{v:.4f}" for v in self.odom[1:4]]
+        row += [f"{v:.4f}" for v in self.filt[1:4]]
 
-    	row = [f"{trel:.3f}"]
-    	row += [f"{v:.4f}" for v in self.odom[1:4]]
-    	row += [f"{v:.4f}" for v in self.filt[1:4]]
+        # write GT if we have it; otherwise write blanks/NaNs
+        if self.gt is not None:
+            row += [f"{v:.4f}" for v in self.gt[1:4]]
+        else:
+            row += ["", "", ""]  # or "nan", "nan", "nan"
 
-    	# write GT if we have it; otherwise write blanks/NaNs
-    	if self.gt is not None:
-        	row += [f"{v:.4f}" for v in self.gt[1:4]]
-    	else:
-        	row += ["", "", ""]  # or "nan", "nan", "nan"
-
-    	self.w.writerow(row)
-    	self.csv.flush()
+        self.w.writerow(row)
+        self.csv.flush()
 
     def destroy_node(self):
         try:
