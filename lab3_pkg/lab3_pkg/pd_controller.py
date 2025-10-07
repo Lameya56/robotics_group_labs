@@ -15,18 +15,30 @@ class PDWaypoint(Node):
         super().__init__('pd_waypoint')
 
         # === PARAMETERS / GAINS (FILL THESE) ===
-        self.Kp_lin = self.declare_parameter('Kp_lin', 0.6).value     # e.g., 0.6
-        self.Kp_ang = self.declare_parameter('Kp_ang', 2.0).value     # e.g., 2.0
-        self.Kd_ang = self.declare_parameter('Kd_ang', 0.3).value     # e.g., 0.3
+        self.Kp_lin = self.declare_parameter('Kp_lin', 0.4).value     # e.g., 0.6
+        self.Kp_ang = self.declare_parameter('Kp_ang', 3.0).value     # e.g., 2.0
+        self.Kd_ang = self.declare_parameter('Kd_ang', 0.5).value     # e.g., 0.3
         self.max_lin = self.declare_parameter('max_lin', 0.35).value
         self.max_ang = self.declare_parameter('max_ang', 1.2).value
-        self.goal_tol = self.declare_parameter('goal_tol', 0.08).value # e.g., 0.08 (meters)
+        self.goal_tol = self.declare_parameter('goal_tol', 0.05).value # e.g., 0.08 (meters)
 
         # Waypoints (a square). You can change/extend these.
         self.waypoints = [
+            (0.2, 0.0),
+            (0.4, 0.0),
+            (0.6, 0.0),
             (0.8, 0.0),
+            (0.8, 0.2),
+            (0.8, 0.4),
+            (0.8, 0.6),
             (0.8, 0.8),
+            (0.6, 0.8),
+            (0.4, 0.8),
+            (0.2, 0.8),
             (0.0, 0.8),
+            (0.0, 0.6),
+            (0.0, 0.4),
+            (0.0, 0.2),
             (0.0, 0.0),
         ]
         self.wp_idx = 0
