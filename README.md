@@ -62,6 +62,28 @@ In another terminal, run the PD Controller by
 - ros2 run lab3_pkg pd_controller
 
 ## Part 3
+**Step 1 - Setting Up Terminals**
+
+Open three(3) separate terminals and run the following commands on each terminal:
+- cd ~/ros2_ws
+- colcon build
+- source install/setup.bash
+
+**Step 2 - Run Gazebo**
+
+On the first terminal, run the following:
+- export TURTLEBOT3_MODEL=burger
+- ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
+
+**Step 3 - Run RViz2**
+
+On the second terminal, run the following:
+- ros2 launch turtlebot3_bringup rviz2.launch.py
+
+**Step 4 - Run PiD Control**
+
+On the third terminal, to make the burger bot move along the left wall:
+- ros2 run lab3_pkg wall_following
 
 ## Part 4
 **Step 1 - Setting up Topic**
