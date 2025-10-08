@@ -16,17 +16,17 @@ class WallFollower(Node):
         super().__init__('wall_follower')
 
         # === PARAMETERS (FILL SOME) ===
-        # Desired right-wall following distance (meters)
-        self.d_des = self.declare_parameter('desired_distance', 0.5).value  # e.g., 0.7
+        # Desired left-wall following distance (meters)
+        self.d_des = self.declare_parameter('desired_distance', 0.6).value  # e.g., 0.7
         # Lookahead distance L (meters)
-        self.lookahead = self.declare_parameter('lookahead', 0.4).value     # e.g., 0.6
+        self.lookahead = self.declare_parameter('lookahead', 0.5).value     # e.g., 0.6
         # Beam separation angle theta (deg) for two-range geometry
-        self.theta_deg = self.declare_parameter('theta_deg', 40.0).value
+        self.theta_deg = self.declare_parameter('theta_deg', 25.0).value
 
         # PID gains
         self.Kp = self.declare_parameter('Kp', 1.2).value  # e.g., 1.8
-        self.Ki = self.declare_parameter('Ki', 0.0).value  # e.g., 0.0 (start at 0)
-        self.Kd = self.declare_parameter('Kd', 0.15).value  # e.g., 0.2
+        self.Ki = self.declare_parameter('Ki', 0.01).value  # e.g., 0.0 (start at 0)
+        self.Kd = self.declare_parameter('Kd', 0.6).value  # e.g., 0.2
 
         # Speed schedule based on |steer|
         self.v_fast = self.declare_parameter('v_fast', 0.35).value
@@ -44,7 +44,7 @@ class WallFollower(Node):
         self.cmd_pub = self.create_publisher(TwistStamped, '/cmd_vel', 10)
         self.scan_sub = self.create_subscription(LaserScan, '/scan', self.scan_cb, 20)
 
-        self.get_logger().info("Wall follower (right side) started.")
+        self.get_logger().info("Wall follower (left side) started.")
 
     @staticmethod
     def wrap_to_scan(angle, amin, amax):
@@ -72,11 +72,11 @@ class WallFollower(Node):
         return nan_safe_min(vals)
 
     def scan_cb(self, msg: LaserScan):
-        # Choose two beams for right-side wall following:
-        # b at -90 deg (to the right), a at -90 + theta
+        # Choose two beams for left-side wall following:
+        # b at 90 deg (to the left), a at 90 - theta
         theta = radians(self.theta_deg)
-        a_ang = -np.pi/2 + theta   # beam a
-        b_ang = -np.pi/2           # beam b
+        a_ang = np.pi/2 - theta   # beam a
+        b_ang = np.pi/2           # beam b
 
         a = self.sample_range(msg, a_ang)
         b = self.sample_range(msg, b_ang)
@@ -95,7 +95,7 @@ class WallFollower(Node):
         D_t1 = D_t + self.lookahead * sin(alpha)
 
         # Distance error (positive if too far from wall)
-        err = self.d_des - D_t1
+        err = D_t1 - self.d_des
 
         # PID update with dt
         now = self.get_clock().now().nanoseconds * 1e-9
