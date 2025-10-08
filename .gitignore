@@ -1,9 +1,0 @@
-# ROS build / workspace artifacts
-/build/
-/install/
-/log/
-/.venv/
-/*.pyc
-__pycache__/
-/*.egg-info
-odom_log.csv
