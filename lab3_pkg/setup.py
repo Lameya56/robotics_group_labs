@@ -30,11 +30,8 @@ setup(
             'pd_controller = lab3_pkg.pd_controller:main',
             'compare_logger = lab3_pkg.compare_logger:main',
             'compare_plot = lab3_pkg.compare_plot:main',
-<<<<<<< HEAD
             'wall_following = lab3_pkg.wall_following:main',
-=======
             'compare_pd_and_cmd = lab3_pkg.compare_pd_and_cmd:main'
->>>>>>> main
         ],
     },
 )
