@@ -2,14 +2,39 @@ import csv, os, math
 import matplotlib.pyplot as plt
 
 
-def _to_float_or_nan(s): 
+def _to_float_or_nan(s):   
     s = s.strip() if isinstance(s, str) else s
     return float(s) if s not in (None, "",) else float('nan')
 
-def _any_finite(xs): 
+def _any_finite(xs):
+    """
+    Check if a list contains any finite numbers.
+    Args:
+        xs (list of float): List of numeric values.    
+    Returns:
+        bool: True if any value in the list is finite, False otherwise.
+    """ 
     return any(math.isfinite(x) for x in xs)
 
 def main():
+    """
+    Reads logged odometry and EKF-filtered data from a CSV file and plots the
+    trajectories against ground truth (if available) for comparison.
+
+    CSV file format (columns):
+        t          : time (s)
+        odom_x     : x-position from raw odometry
+        odom_y     : y-position from raw odometry
+        filt_x     : x-position from EKF (/odometry/filtered)
+        filt_y     : y-position from EKF (/odometry/filtered)
+        gt_x       : x-position from Gazebo ground truth (optional)
+        gt_y       : y-position from Gazebo ground truth (optional)
+    
+    The function generates a plot showing:
+        - Odometry trajectory (blue dashed line)
+        - EKF-filtered trajectory (red dashed line)
+        - Ground truth trajectory (green dotted line, if available)
+    """
     path = os.path.expanduser('~/ros2_ws/ekf_compare.csv')
     t = []
     odom_x, odom_y = [], []

@@ -3,6 +3,18 @@ import os
 import matplotlib.pyplot as plt
 
 def main():
+    """
+    Reads logged PD controller trajectory data from a CSV file and plots
+    it against the commanded square path (waypoints) for comparison.
+
+    CSV file format:
+        x : X position of the robot (meters)
+        y : Y position of the robot (meters)
+
+    The function generates a plot showing:
+        - The commanded path (red dashed line)
+        - The actual trajectory from the PD controller (blue dashed line)
+    """
     csv_path = os.path.expanduser('~/ros2_ws/odom_log.csv')
     x, y = [], []
 

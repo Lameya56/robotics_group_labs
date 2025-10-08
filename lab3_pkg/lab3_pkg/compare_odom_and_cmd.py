@@ -3,6 +3,21 @@ import os
 import matplotlib.pyplot as plt
 
 def main():
+    """
+    Reads odometry and command velocity data from a CSV file and generates
+    plots for linear and angular velocity tracking over time.
+
+    CSV file format:
+        t_sec       : Time in seconds
+        lin_x       : Linear velocity measured from odometry
+        ang_z       : Angular velocity measured from odometry
+        cmd_lin_x   : Commanded linear velocity
+        cmd_ang_z   : Commanded angular velocity
+
+    The function produces two figures:
+        1. Linear velocity vs. time
+        2. Angular velocity vs. time
+    """
     csv_path = os.path.expanduser('~/ros2_ws/odom_log.csv')
     t, lin_odom, ang_odom, lin_cmd, ang_cmd = [], [], [], [], []
 

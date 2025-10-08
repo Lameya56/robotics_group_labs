@@ -11,6 +11,24 @@ def wrap_to_pi(a):
     return a
 
 class PDWaypoint(Node):
+    """
+    A PD controller node for following a sequence of 2D waypoints.
+
+    Subscriptions:
+        /odom (nav_msgs/Odometry): Robot odometry (pose and twist).
+
+    Publications:
+        /cmd_vel (geometry_msgs/TwistStamped): Commanded linear and angular velocities.
+
+    Parameters:
+        Kp_lin (float): Proportional gain for linear velocity.
+        Kp_ang (float): Proportional gain for angular velocity.
+        Kd_ang (float): Derivative gain for angular velocity.
+        max_lin (float): Maximum linear velocity.
+        max_ang (float): Maximum angular velocity.
+        goal_tol (float): Distance threshold to consider a waypoint reached.
+    """
+
     def __init__(self):
         super().__init__('pd_waypoint')
 

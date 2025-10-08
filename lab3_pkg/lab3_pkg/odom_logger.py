@@ -11,6 +11,21 @@ def yaw_from_quaternion(qx, qy, qz, qw):
     return atan2(2.0 * (qw * qz), 1.0 - 2.0 * (qz * qz))
 
 class OdomLogger(Node):
+    """
+    ROS2 Node that logs TurtleBot odometry and commanded velocities to a CSV file.
+
+    Subscriptions:
+        /odom (nav_msgs/Odometry): Robot odometry.
+        /cmd_vel (geometry_msgs/TwistStamped): Commanded linear and angular velocities.
+
+    CSV Output Columns:
+        - t_sec      : Time since logging started (seconds)
+        - x, y, yaw  : Robot pose
+        - lin_x, lin_y, lin_z  : Linear velocity from odometry
+        - ang_x, ang_y, ang_z  : Angular velocity from odometry
+        - cmd_lin_x  : Last commanded linear velocity
+        - cmd_ang_z  : Last commanded angular velocity
+    """
     def __init__(self):
         super().__init__('odom_logger')
 	    # Subscribe to odometry

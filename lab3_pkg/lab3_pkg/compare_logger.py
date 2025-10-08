@@ -7,9 +7,25 @@ import csv, os
 
 def yaw_from_quat(q):
     # planar yaw shortcut
+    """
+    Convert a quaternion to planar yaw (rotation about Z-axis).
+
+    Args:
+        q (geometry_msgs.msg.Quaternion): Quaternion from a ROS message.
+
+    Returns:
+        float: Yaw angle in radians.
+    """
     return atan2(2.0*(q.w*q.z), 1.0 - 2.0*(q.z*q.z))
 
 class CompareLogger(Node):
+    """
+    ROS2 node that logs and compares the trajectories from:
+        - /odom (wheel odometry)
+        - /odometry/filtered (EKF filtered)
+        - /gazebo/model_states (ground truth)
+    Outputs the data to a CSV file for later plotting.
+    """
     def __init__(self):
         super().__init__('compare_logger')
 
@@ -39,6 +55,12 @@ class CompareLogger(Node):
         self.timer = self.create_timer(0.05, self.tick)  # 20 Hz
 
     def odom_cb(self, msg: Odometry):
+        """
+        Callback for /odom topic. Stores the latest odometry data.
+
+        Args:
+            msg (Odometry): Odometry message.
+        """
         x = msg.pose.pose.position.x
         y = msg.pose.pose.position.y
         q = msg.pose.pose.orientation
@@ -47,6 +69,12 @@ class CompareLogger(Node):
         self.odom = (t, x, y, yaw)
 
     def filt_cb(self, msg: Odometry):
+        """
+        Callback for /odometry/filtered topic. Stores the latest EKF-filtered odometry.
+
+        Args:
+            msg (Odometry): Filtered odometry message.
+        """
         x = msg.pose.pose.position.x
         y = msg.pose.pose.position.y
         q = msg.pose.pose.orientation
@@ -55,6 +83,12 @@ class CompareLogger(Node):
         self.filt = (t, x, y, yaw)
 
     def ms_cb(self, msg: ModelStates):
+        """
+        Callback for /gazebo/model_states topic. Stores ground truth pose.
+
+        Args:
+            msg (ModelStates): Gazebo model states message.
+        """
         if self.model_name in msg.name:
             idx = msg.name.index(self.model_name)
             pose = msg.pose[idx]
@@ -65,6 +99,10 @@ class CompareLogger(Node):
             self.gt = (t, pose.position.x, pose.position.y, yaw)
 
     def tick(self):
+        """
+        Timer callback that writes the latest odometry, filtered, and ground truth
+        data to the CSV file.
+        """
         if self.odom is None or self.filt is None:
             return
 
@@ -87,6 +125,9 @@ class CompareLogger(Node):
         self.csv.flush()
 
     def destroy_node(self):
+        """
+        Close CSV file before destroying the node.
+        """
         try:
             self.csv.close()
         except Exception:
