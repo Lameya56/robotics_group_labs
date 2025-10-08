@@ -4,6 +4,15 @@ import matplotlib.pyplot as plt
 import math
 
 def read_csv(path):
+    """
+    Read odometry CSV file and extract timestamps, x, and y positions.
+
+    Args:
+        path (str): Path to the CSV file.
+
+    Returns:
+        tuple: Three lists (timestamps, x positions, y positions).
+    """
     xs, ys, ts = [], [], []
     with open(path, 'r') as f:
         reader = csv.DictReader(f)
@@ -17,6 +26,14 @@ def read_csv(path):
     return ts, xs, ys
 
 def plot_path(xs, ys, L=None):
+    """
+    Plot a 2D odometry trajectory, optionally overlaying an ideal square.
+
+    Args:
+        xs (list of float): X positions of the robot.
+        ys (list of float): Y positions of the robot.
+        L (float, optional): Side length of the commanded square path to overlay.
+    """
     plt.figure(figsize=(6,6))
     plt.plot(xs, ys, linewidth=2, label='Odometry path (/odom)')
     plt.axis('equal')

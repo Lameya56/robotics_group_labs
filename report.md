@@ -24,7 +24,9 @@ Part 2
 
 ## Tehnical Report
 **Methods: how you implemented each part (logger, PD, PID, EKF).**
+
 Logger: 
+
 I implemented an odometry logger node (odom_logger.py) that subscribes to both /odom (for measured velocities) and /cmd_vel (for commanded velocities). The node logs timestamp, odom_lin_x, odom_ang_z, cmd_lin_x, and cmd_ang_z into a CSV file.
 
 Each message callback stores the most recent readings in variables, and a timer periodically writes synchronized data rows to disk. This allowed for later comparison of commanded versus measured motion.
@@ -37,6 +39,7 @@ Commanded vs. Odometry Angular Velocity
 **Results: trajectory plots, screenshots, performance observations.**
 
 **Comparisons: open-loop vs. closed-loop, /odom vs. /odometry/filtered.**
+
 In open-loop mode, the robot was driven using timed velocity commands to trace a square. The Odometry vs Ideal Path plot showed drift accumulating over each leg and how the square gradually became distorted. This is expected because open-loop control does not correct for wheel slip, latency, or noise in wheel encoder measurements.
 
 **Controller tuning: how you chose/tuned Kp, Ki, Kd.**
@@ -45,6 +48,7 @@ In open-loop mode, the robot was driven using timed velocity commands to trace a
 
 **Division of labor: who did what in the group (coding, plotting, writing, debugging, etc.). Confirmation that all members participated and understand the work.**
 Lameya: Worked on part 1 and part 2 partially. 
+Patrick: Completed part 1 and part 2.
 
 ## Reflection Questions
 **Part 1: Odometry and Open-Loop**
