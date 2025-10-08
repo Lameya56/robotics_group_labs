@@ -6,12 +6,14 @@ import numpy as np
 from math import radians, tan, atan, cos, sin
 
 def nan_safe_min(a):
+    """Returns minimum non-NaN value for mathemathical purposes."""
     # Return min ignoring NaNs; if all NaN, return +inf
     if np.all(np.isnan(a)):
         return np.inf
     return np.nanmin(a)
 
 class WallFollower(Node):
+    """Uses PiD control to make the robot locate a left wall and start following around it at a distance."""
     def __init__(self):
         super().__init__('wall_follower')
 
@@ -48,7 +50,7 @@ class WallFollower(Node):
 
     @staticmethod
     def wrap_to_scan(angle, amin, amax):
-        """Wrap an angle into [amin, amax] by adding/subtracting 2π."""
+        """Wrap an angle into [amin, amax] by adding/subtracting 2π. Gets valid angles for robot's sensor"""
         two_pi = 2.0 * np.pi
         while angle < amin:
             angle += two_pi
@@ -94,7 +96,7 @@ class WallFollower(Node):
         D_t = b * cos(alpha)
         D_t1 = D_t + self.lookahead * sin(alpha)
 
-        # Distance error (positive if too far from wall)
+        # Distance error (negative if too far from wall)
         err = D_t1 - self.d_des
 
         # PID update with dt
