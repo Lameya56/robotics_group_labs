@@ -14,6 +14,7 @@ def nan_safe_min(a):
 
 class WallFollower(Node):
     """Uses PiD control to make the robot locate a left wall and start following around it at a distance."""
+    """Initializes the desired_distance from wall, lookahead, and separation angle between left and front view of robot. The PiD gains are initialized as well as the speed of the robot. The scanners and errors are set."""
     def __init__(self):
         super().__init__('wall_follower')
 
@@ -61,6 +62,7 @@ class WallFollower(Node):
     def sample_range(self, msg: LaserScan, angle_rad):
         """
         Return a robust distance reading at a specific bearing by sampling +/- a few indices.
+        Gets min valid distance from the robot scan, avoiding any NaN values.
         """
         # Map angle to index
         # LaserScan: angle_min + i*angle_increment
@@ -74,8 +76,10 @@ class WallFollower(Node):
         return nan_safe_min(vals)
 
     def scan_cb(self, msg: LaserScan):
+        """Using the robot's sensor, find a valid wall to go towards and accounts for fast turning speeds and general forward speed."""
         # Choose two beams for left-side wall following:
         # b at 90 deg (to the left), a at 90 - theta
+        # b is facing left exactly, while a is slightly upwards (northwest)
         theta = radians(self.theta_deg)
         a_ang = np.pi/2 - theta   # beam a
         b_ang = np.pi/2           # beam b
@@ -83,7 +87,7 @@ class WallFollower(Node):
         a = self.sample_range(msg, a_ang)
         b = self.sample_range(msg, b_ang)
 
-        # If either is inf (no return), don't command aggressively
+        # If either is inf (no return), don't command aggressively, stopping invalid oscillations
         if not np.isfinite(a) or not np.isfinite(b):
             self.publish_cmd(0.0, 0.0)
             return
@@ -96,7 +100,7 @@ class WallFollower(Node):
         D_t = b * cos(alpha)
         D_t1 = D_t + self.lookahead * sin(alpha)
 
-        # Distance error (negative if too far from wall)
+        # Distance error (negative if too far from wall), which causes the robot to turn towards the left (searching for a wall).
         err = D_t1 - self.d_des
 
         # PID update with dt
@@ -124,12 +128,14 @@ class WallFollower(Node):
         self.publish_cmd(v, w)
 
     def publish_cmd(self, v, w):
+        # Makes the robot move according to what has been scanned by the robot's observation and mathematical expression to move at a certain speed forward, and turn at a certain angle.
         cmd = TwistStamped()
         cmd.twist.linear.x = v
         cmd.twist.angular.z = w
         self.cmd_pub.publish(cmd)
 
 def main():
+    # Initializes WallFollower node, and continues to run the node until it is stopped by user interrupt input.
     rclpy.init()
     node = WallFollower()
     try:
