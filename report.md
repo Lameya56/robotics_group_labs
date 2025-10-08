@@ -7,6 +7,7 @@
 ![alt text](image-1.png)
 
 **PD trajectory vs. commanded path**
+![alt text](image-3.png)
 
 **Wall-following behavior**
 
