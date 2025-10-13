@@ -8,9 +8,9 @@ ekf_filter_node:
 
     # Frames (fill these to match your robot)
     map_frame: map
-    odom_frame: odom       # e.g., "odom"
-    base_link_frame: base_link    # e.g., "base_link"
-    world_frame: odom       # typical: "odom" for localization w.r.t odom
+    odom_frame: odom
+    base_link_frame: base_footprint    # CRITICAL: Must match /odom child_frame_id!
+    world_frame: odom
 
     # ===== Wheel Odometry input =====
     odom0: /odom

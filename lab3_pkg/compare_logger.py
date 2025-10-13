@@ -4,6 +4,9 @@ from nav_msgs.msg import Odometry
 from gazebo_msgs.msg import ModelStates
 from math import atan2
 import csv, os
+from tf2_ros import TransformException
+from tf2_ros.buffer import Buffer
+from tf2_ros.transform_listener import TransformListener
 
 def yaw_from_quat(q):
     # planar yaw shortcut
@@ -38,7 +41,10 @@ class CompareLogger(Node):
 
         self.create_subscription(Odometry, '/odom', self.odom_cb, 20)
         self.create_subscription(Odometry, '/odometry/filtered', self.filt_cb, 20)
-        self.create_subscription(ModelStates, '/gazebo/model_states', self.ms_cb, 5)
+
+        # Use TF2 to get ground truth instead of ModelStates
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
 
         self.csv_path = os.path.expanduser('~/ros2_ws/ekf_compare.csv')
         self.csv = open(self.csv_path, 'w', newline='')
@@ -82,21 +88,28 @@ class CompareLogger(Node):
         t = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
         self.filt = (t, x, y, yaw)
 
-    def ms_cb(self, msg: ModelStates):
+    def get_ground_truth_from_tf(self):
         """
-        Callback for /gazebo/model_states topic. Stores ground truth pose.
+        Get ground truth pose from TF transform instead of ModelStates.
+        Looks up the transform from 'odom' to 'base_footprint'.
+        """
+        try:
+            # Get transform from odom to base_footprint (robot's ground truth pose)
+            transform = self.tf_buffer.lookup_transform(
+                'odom',
+                'base_footprint',
+                rclpy.time.Time(),
+                timeout=rclpy.duration.Duration(seconds=0.1))
 
-        Args:
-            msg (ModelStates): Gazebo model states message.
-        """
-        if self.model_name in msg.name:
-            idx = msg.name.index(self.model_name)
-            pose = msg.pose[idx]
-            q = pose.orientation
+            x = transform.transform.translation.x
+            y = transform.transform.translation.y
+            q = transform.transform.rotation
             yaw = yaw_from_quat(q)
-            # Gazebo ModelStates lacks a header stamp; approximate with ROS clock
             t = self.get_clock().now().nanoseconds * 1e-9
-            self.gt = (t, pose.position.x, pose.position.y, yaw)
+            self.gt = (t, x, y, yaw)
+        except TransformException as ex:
+            # If transform not available, keep previous value
+            pass
 
     def tick(self):
         """
@@ -105,6 +118,9 @@ class CompareLogger(Node):
         """
         if self.odom is None or self.filt is None:
             return
+
+        # Update ground truth from TF
+        self.get_ground_truth_from_tf()
 
         t = self.get_clock().now().nanoseconds * 1e-9
         if self.t0 is None:
