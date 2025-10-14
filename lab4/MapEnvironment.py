@@ -58,7 +58,8 @@ class MapEnvironment(object):
             x = config[0,index]
             y = config[1, index]
 
-            if x < self.xlimit[0] or x > self.xlimit[1] or y < self.ylimit[0] or y > self.ylimit[1]:
+            # Checking to see if the coordinates are out of bounds or an obstacle
+            if x < self.xlimit[0] or x > self.xlimit[1] or y < self.ylimit[0] or y > self.ylimit[1] or self.map[x,y] == 1:
                 return False
 
         return True
