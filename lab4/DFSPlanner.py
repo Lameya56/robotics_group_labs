@@ -34,12 +34,13 @@ class DFSPlanner(object):
             y = int(current_location[1,0])  
 
             # If the location is an obstacle, invalid location, or a previously explored location
-            if not self.env.state_validity_checker(current_location) or self.env.map[x,y] == 1 or self.visited[x, y] == 1:
+            if not self.env.state_validity_checker(current_location) or self.visited[x, y] == 1:
                 continue
 
             state_count += 1      
 
             if self.env.goal_criterion(current_location, goal_config):
+                print("Goal Reached!")
                 plan = self.tracePlan(parents, current_location, goal_config)
                 break
             
@@ -50,10 +51,9 @@ class DFSPlanner(object):
                 next_y = y + dy
                 child = np.array([[next_x], [next_y]])
 
-                if self.env.state_validity_checker(child):
-                    if self.visited[next_x, next_y] == 0:
-                        stack.append((child, current_location))
-                        parents[tuple(child.flatten())] = tuple(current_location.flatten())
+                if self.env.state_validity_checker(child) and self.visited[next_x, next_y] == 0:
+                    stack.append((child, current_location))
+                    parents[tuple(child.flatten())] = tuple(current_location.flatten())
 
         cost = self.calculateCost(plan)
         plan_time = time.time() - plan_time
