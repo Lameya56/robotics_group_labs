@@ -33,16 +33,19 @@ class VisibilityGraphPlanner(object):
         return [np.array(v).reshape(2, 1) for v in vertices]
 
     def _build_visibility_graph(self, vertices):
-        """Build a visibility graph from the given vertices."""
+        '''construct the visibility graph from the group of vertices'''
+        # initialize dict as the visibility graph
         graph = {}
         
-        # Add all vertices to the graph
-        # initialize adjacency list for every vertex index
+        # key represents vertice # and value represents a vertice -> (vertice #, distance)
+        # where distance calculates the key vertice and the value vertice
         for i in range(len(vertices)):
             graph[i] = []
         
-        # Check visibility between all pairs of vertices
-        # check visibility pairwise (undirected)
+        # check every vertice with each vertice
+        # if connecting edge between two vertices doesn't hit an obstacle,
+        # calculate the distance between each vertice
+        # update each vertice's distance from each other in the graph dict
         for i in range(len(vertices)):
             for j in range(i + 1, len(vertices)):
                 if self.env.edge_validity_checker(vertices[i], vertices[j]):
@@ -52,7 +55,7 @@ class VisibilityGraphPlanner(object):
         
         return graph
 
-    def _dijkstra(self, graph, vertices, start_idx, goal_idx):
+    def _dijkstra(self, graph, vertices, start_idx, goal_idx, max_states):
         ''' find the shortest path from start to goal using Dijkstra's algorithm
             modified code from GeeksforGeeks '''
         
@@ -75,6 +78,11 @@ class VisibilityGraphPlanner(object):
             # remove the smallest node by dist, get the dist and node separately
             current_dist, current_node = heapq.heappop(pq)
             state_count += 1
+            
+            # if shortest path searching takes too long, exit loop and get results without reaching goal
+            if state_count >= max_states:
+                print("Maximum states reached. Exiting without reaching goal.")
+                break
             
             # we reached the goal, so stop searching for best path
             if current_node == goal_idx:
@@ -113,6 +121,7 @@ class VisibilityGraphPlanner(object):
         path = []
         cost = 0
         state_count = 0
+        max_states = 100000 # when dijkstra infinitely runs
         
         # Get obstacle vertices
         obs_vertices = self._get_obstacle_vertices()
@@ -123,12 +132,12 @@ class VisibilityGraphPlanner(object):
         # build visibility graph
         graph = self._build_visibility_graph(vertices)
         
-        # run dijkstra's algorithm, start is index 0 and goal is index 1 in vertices list
-        path, cost, state_count = self._dijkstra(graph, vertices, 0, 1)
+        # run dijkstra's algorithm, start is index 0 and goal is index 1 in vertices list, max_states
+        path, cost, state_count = self._dijkstra(graph, vertices, 0, 1, max_states)
         
         if not path:
             # use direct start->goal path as plan
-            plan = [start_config, goal_config]
+            path = [start_config, goal_config]
             print("No optimal path was found. Using direct path.")
         
         plan_time = time.time() - plan_time
@@ -137,4 +146,4 @@ class VisibilityGraphPlanner(object):
         print("Cost: %f" % cost)
         print("Planning Time: %ss" % plan_time)
 
-        return np.hstack(plan)
+        return np.hstack(path)

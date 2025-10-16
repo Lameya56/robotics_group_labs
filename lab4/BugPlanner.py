@@ -6,7 +6,6 @@ class BugPlanner:
         self.env = planning_env
         self.anystep = anystep
         self.lookahead = lookahead
-        self.visited = np.zeros(planning_env.map.shape)
 
     def _get_next_wall_move(self, prev_pos, current_pos):
         # Helper function to find the next move when following a wall
@@ -35,8 +34,8 @@ class BugPlanner:
         for nx, ny in ordered_dirs:
             next_x, next_y = x + nx*self.anystep, y + ny*self.anystep
 
-            # go to next direction if new position was already visited or it is a obstacle, invalid, etc.
-            if self.visited[next_x, next_y] == 1 or not self.env.state_validity_checker(np.array([[next_x],[next_y]])):
+            # go to next direction if it is a obstacle, invalid, etc.
+            if not self.env.state_validity_checker(np.array([[next_x],[next_y]])):
                 continue
 
             # adjacent gets the 8 possible coords around the position
@@ -104,38 +103,33 @@ class BugPlanner:
         state_count = 0
 
         m_line = self._bresenham(start, goal)
-        m_line_dupe = m_line.copy() # used to validate hit_point and leave_point
         print("m_line: ", m_line)
         while m_line:
             x,y = m_line[0]
             x = int(x)
             y = int(y)
-            # if location is an obstacle or invalid location
+            # if 'robot' bumps into a obstacle or invalid location while traversing along the m_line
             if not self.env.state_validity_checker(np.array([[x],[y]])):
-                # follow the wall until
-                hit_point = path[-1] # point right before wall is hit
+                # begin to follow the wall
+                hit_point = path[-1] # get the hit_point (right before robot hit a wall)
                 wall_following = True
                 while wall_following:
                     if len(path) < 2:
-                        prev_pos = path[-1] # prev_pos is the same as current position
+                        prev_pos = hit_point # prev_pos is the same as current position
                     else:
                         prev_pos = path[-2]
                     nextx, nexty = self._get_next_wall_move(prev_pos, path[-1])
                     state_count += 1
-                        #print("Next wall move: ", (nextx, nexty))
-                        #print("Path taken: ", path)
-                        #print("m_line: ", m_line)
-                    if (nextx, nexty) != path[-1] and (nextx, nexty) in m_line:
+                    
+                    if (nextx, nexty) != hit_point and (nextx, nexty) in m_line:
                         leave_point = m_line.index((nextx, nexty))
-                        # m_line is reached and leave_point closer than hit_point
-                        if m_line_dupe.index(hit_point) < m_line_dupe.index((nextx, nexty)):
+                        # check if leave_point is closer to the goal than hit_point
+                        if self.compute_distance(np.array[[hit_point[0]], [hit_point[1]]], goal) > self.compute_distance(np.array[[nextx], [nexty]], goal):
                             path.append((nextx,nexty))
-                            self.visited[nextx,nexty] = 1
                             del m_line[:leave_point+1]
                             wall_following = False
-                    elif (nextx, nexty) != path[-1]: # m_line not reached, wall_following continues
+                    elif (nextx, nexty) != hit_point: # m_line not reached, wall_following continues
                         path.append((nextx,nexty))
-                        self.visited[nextx,nexty] = 1
                     else:
                         print("Did not reach goal.")
                         cost = self.calculateCost(path)
