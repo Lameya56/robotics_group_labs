@@ -32,11 +32,6 @@ class VisibilityGraphPlanner(object):
         # Convert the set of tuple coordinates to the required list of numpy arrays
         return [np.array(v).reshape(2, 1) for v in vertices]
 
-    def _is_visible(self, config1, config2):
-        """Check if two configurations are visible to each other (no obstacles in between)."""
-        # delegate to the environment's edge checker
-        return self.env.edge_validity_checker(config1, config2)
-
     def _build_visibility_graph(self, vertices):
         """Build a visibility graph from the given vertices."""
         graph = {}
@@ -50,7 +45,7 @@ class VisibilityGraphPlanner(object):
         # check visibility pairwise (undirected)
         for i in range(len(vertices)):
             for j in range(i + 1, len(vertices)):
-                if self._is_visible(vertices[i], vertices[j]):
+                if self.env.edge_validity_checker(vertices[i], vertices[j]):
                     distance = self.env.compute_distance(vertices[i], vertices[j])
                     graph[i].append((j, distance))
                     graph[j].append((i, distance))
@@ -58,73 +53,83 @@ class VisibilityGraphPlanner(object):
         return graph
 
     def _dijkstra(self, graph, vertices, start_idx, goal_idx):
-        # Using Dijkstra's algorithm to find the shortest path.
-
-        # Initialize distances and previous nodes
-        dist = {node: float('inf') for node in graph}
-        prev = {node: None for node in graph}
-        dist[start_idx] = 0
+        ''' find the shortest path from start to goal using Dijkstra's algorithm
+            modified code from GeeksforGeeks '''
         
-        # Priority queue: (distance, node_index)
+        # initialize distance value of each node to infinity
+        # initialize previous value node to None, for pathfinding
+        dist = {}
+        prev = {}
+        for node in graph:
+            dist[node] = float('inf')
+            prev[node] = None
+    
+        dist[start_idx] = 0 # distance to start is 0, bc we find path from start to goal
+        
+        # put start index tuple in priority queue, we put distance value first so pq can sort by dist
         pq = [(0, start_idx)]
         
         state_count = 0
         
         while pq:
+            # remove the smallest node by dist, get the dist and node separately
             current_dist, current_node = heapq.heappop(pq)
             state_count += 1
             
-            # If we reached the goal, we can stop
+            # we reached the goal, so stop searching for best path
             if current_node == goal_idx:
                 break
             
-            # If we found a better path already, skip
+            # the current distance is bigger/worse than the prev path to node
             if current_dist > dist[current_node]:
                 continue
             
-            # Explore neighbors
-            for neighbor, weight in graph[current_node]:
-                new_dist = current_dist + weight
-                if new_dist < dist[neighbor]:
-                    dist[neighbor] = new_dist
-                    prev[neighbor] = current_node
-                    heapq.heappush(pq, (new_dist, neighbor))
+            # get the adjacent nodes from curr node that "robot" is on
+            # if prev path to an adjacent node is bigger/worse than path from current_node
+            # update best dist for adjacent node and the prev node to it
+            # push the index tuple to the pq
+            # pq automatically sorts nodes so nodes w/ shortest path are searched first
+            for adj, weight in graph[current_node]:
+                if dist[adj] > current_dist + weight:
+                    dist[adj] = current_dist + weight
+                    prev[adj] = current_node
+                    heapq.heappush(pq, (current_dist + weight, adj))
         
-        # Reconstruct path
+        # get shortest path once goal is reached
         path = []
         current = goal_idx
+        # exits loop when current is at start
         while current is not None:
-            path.append(vertices[current])
-            current = prev[current]
+            path.append(vertices[current])  # add vertices that were visited on path
+            current = prev[current] # get the next vertice in reverse order
         
-        path.reverse()
+        path.reverse() # flip list so start is first and goal is last
         
+        # return the path list, cost of going from start->goal, and the state_count
         return path, dist[goal_idx], state_count
 
     def Plan(self, start_config, goal_config):
         plan_time = time.time()
+        path = []
+        cost = 0
+        state_count = 0
         
         # Get obstacle vertices
         obs_vertices = self._get_obstacle_vertices()
         
-        # Create vertex list including start and goal
-        # start and goal are first two indices (0 and 1)
+        # vertices list contains the start, goal, and obstacles
         vertices = [start_config, goal_config] + obs_vertices
         
-        # Build visibility graph
+        # build visibility graph
         graph = self._build_visibility_graph(vertices)
         
-        # Run Dijkstra's algorithm (start is index 0, goal is index 1)
-        plan_path, cost, state_count = self._dijkstra(graph, vertices, 0, 1)
+        # run dijkstra's algorithm, start is index 0 and goal is index 1 in vertices list
+        path, cost, state_count = self._dijkstra(graph, vertices, 0, 1)
         
-        # Convert plan to the correct format [2 x n]
-        # Each element in plan_path is a [2, 1] array, we need to stack them horizontally
-        # stack the resulting column vectors into a [2 x n] plan
-        if plan_path:
-            plan = np.hstack(plan_path)
-        else:
-            # fallback: return direct start->goal if no path found
-            plan = np.hstack([start_config, goal_config])
+        if not path:
+            # use direct start->goal path as plan
+            plan = [start_config, goal_config]
+            print("No optimal path was found. Using direct path.")
         
         plan_time = time.time() - plan_time
 
@@ -132,4 +137,4 @@ class VisibilityGraphPlanner(object):
         print("Cost: %f" % cost)
         print("Planning Time: %ss" % plan_time)
 
-        return plan
+        return np.hstack(plan)

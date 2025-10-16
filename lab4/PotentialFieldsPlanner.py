@@ -1,107 +1,101 @@
 import numpy as np
 import time
+from collections import deque
 
 class PotentialFieldsPlanner(object):
     def __init__(self, planning_env):
         self.env = planning_env
-        # Tuning parameters for optimal performance
-        self.k_att = 2.0    # Attractive gain for faster convergence
-        self.k_rep = 10.0    # Repulsive gain for safety
-        self.rho_0 = 10.0    # Obstacle influence radius
-
-    def compute_potential_gradient(self, robot_position, goal_position):
-        """
-        Compute gradient of potential field P(x) at robot position
-        Uses sensor information (environment map) to estimate ∇P(x)
-        Returns motor vector u to follow gradient
-        """
-        # 1. ATTRACTIVE POTENTIAL GRADIENT (minimize travel time)
-        # Quadratic potential near goal for stability, conic far away for speed
-        dist_to_goal = np.linalg.norm(robot_position - goal_position)
-        
-        if dist_to_goal <= 2.0:  # Close to goal - quadratic for stability
-            attractive_gradient = self.k_att * (robot_position - goal_position)
-        else:  # Far from goal - conic for speed
-            attractive_gradient = self.k_att * (robot_position - goal_position) / dist_to_goal
-        
-        # 2. REPULSIVE POTENTIAL GRADIENT (avoid crashes)
-        repulsive_gradient = np.zeros((2, 1))
-        x, y = int(robot_position[0,0]), int(robot_position[1,0])
-        
-        # Sensor reading: check obstacles within influence radius
-        sensor_range = int(self.rho_0)
-        for dx in range(-sensor_range, sensor_range + 1):
-            for dy in range(-sensor_range, sensor_range + 1):
-                nx, ny = x + dx, y + dy
-                
-                # Check if obstacle detected by sensor
-                if (0 <= nx < self.env.map.shape[0] and 
-                    0 <= ny < self.env.map.shape[1] and 
-                    self.env.map[nx, ny] == 1):
-                    
-                    obstacle_pos = np.array([[nx], [ny]])
-                    dist_to_obs = np.linalg.norm(robot_position - obstacle_pos)
-                    
-                    # Only consider obstacles within influence radius
-                    if 0 < dist_to_obs <= self.rho_0:
-                        # Repulsive potential: grows to infinity near obstacles
-                        dir_to_robot = (robot_position - obstacle_pos) / dist_to_obs
-                        repulsive_magnitude = self.k_rep * (1/dist_to_obs - 1/self.rho_0) * (1/dist_to_obs**2)
-                        repulsive_gradient += repulsive_magnitude * dir_to_robot
-        
-        # 3. TOTAL POTENTIAL GRADIENT ∇P(x)
-        total_gradient = attractive_gradient + repulsive_gradient
-        
-        # 4. MOTOR VECTOR u (follow negative gradient = downhill)
-        motor_vector = -total_gradient
-        
-        return motor_vector, attractive_gradient, repulsive_gradient
 
     def Plan(self, start_config, goal_config):
         plan_time = time.time()
-        
-        plan = [start_config.copy()]
-        current = start_config.copy()
-        
-        for iteration in range(1000):
-            # Stability at goal: check if sufficiently close
-            if np.linalg.norm(current - goal_config) < 0.5:
-                plan.append(goal_config.copy())
-                print(f"Goal reached stably in {iteration} iterations")
+        plan = [start_config]
+        current_pos = start_config.copy()
+        max_iters = 10000
+        step_size = 0.5
+        rep_radius = 3  # obstacle influence radius
+
+        for _ in range(max_iters):
+            # Check if goal reached
+            if self.env.goal_criterion(current_pos, goal_config):
+                plan.append(goal_config)
                 break
-            
-            # Compute motor vector u from potential field gradient
-            motor_vector, att_grad, rep_grad = self.compute_potential_gradient(current, goal_config)
-            
-            # Normalize for consistent movement (minimize travel time)
-            motor_norm = np.linalg.norm(motor_vector)
-            if motor_norm > 0:
-                step_direction = motor_vector / motor_norm
-            else:
-                step_direction = np.zeros((2, 1))
-            
-            # Move in gradient direction
-            next_pos = current + step_direction
-            
-            # Safety check: ensure we don't crash
+
+            # Compute repulsive force from nearby obstacles
+            rep_force = np.zeros((2,1))
+            x0, y0 = int(round(current_pos[0,0])), int(round(current_pos[1,0]))
+
+            for dx in range(-rep_radius, rep_radius+1):
+                for dy in range(-rep_radius, rep_radius+1):
+                    x, y = x0+dx, y0+dy
+                    if 0 <= x < self.env.map.shape[0] and 0 <= y < self.env.map.shape[1]:
+                        if self.env.map[x, y] == 1:
+                            dist = np.sqrt(dx**2 + dy**2)
+                            if dist > 0:
+                                rep_force += np.array([[(x0 - x)/dist**2], [(y0 - y)/dist**2]])
+
+            # Attractive force towards goal
+            goal_force = goal_config - current_pos
+
+            # Combine forces
+            net_force = rep_force + goal_force
+
+            # Compute next position
+            next_pos = current_pos + np.sign(net_force) * step_size
+
             if self.env.state_validity_checker(next_pos):
-                plan.append(next_pos.copy())
-                current = next_pos.copy()
+                plan.append(next_pos)
+                current_pos = next_pos
             else:
-                # Emergency stop if movement would cause crash
-                print("Emergency stop: potential crash detected")
-                break
-        
-        # Calculate actual travel cost
-        cost = 0
-        for i in range(len(plan) - 1):
-            cost += self.env.compute_distance(plan[i], plan[i+1])
-        
+                print("Local minimum detected. Using wavefront to escape...")
+                escape_path = self._wavefront_escape(current_pos)
+                if escape_path is None:
+                    print("No valid escape path found — stopping.")
+                    break
+                for p in escape_path[1:]:  # skip current position
+                    plan.append(p)
+                current_pos = escape_path[-1]
+
         plan_time = time.time() - plan_time
-        
-        print(f"Cost: {cost:.3f} (minimized travel time)")
-        print(f"Planning Time: {plan_time:.3f}s")
-        print(f"Path length: {len(plan)} steps")
-        print(f"Final distance to goal: {np.linalg.norm(current - goal_config):.3f}")
+
+        # Compute path cost
+        cost = sum(self.env.compute_distance(plan[i], plan[i+1]) for i in range(len(plan)-1))
+        print("Cost: %f" % cost)
+        print("Planning Time: %ss" % plan_time)
 
         return np.hstack(plan)
+
+    def _wavefront_escape(self, start_pos):
+        """ Use BFS (wavefront) to find a nearby free cell that is farther from obstacles. """
+        q = deque()
+        visited = set()
+        start = (int(round(start_pos[0,0])), int(round(start_pos[1,0])))
+        q.append((start, [start]))
+        visited.add(start)
+        dirs = [(-1,0), (1,0), (0,-1), (0,1)]  # 4-connected grid
+
+        while q:
+            (x, y), path = q.popleft()
+
+            # Escape criterion: find an open area away from obstacles
+            if self._free_space_around(x, y, radius=2):
+                return [np.array([[px],[py]]) for px,py in path]
+
+            for dx, dy in dirs:
+                nx, ny = x + dx, y + dy
+                if (0 <= nx < self.env.map.shape[0] and
+                    0 <= ny < self.env.map.shape[1] and
+                    (nx, ny) not in visited and
+                    self.env.map[nx, ny] == 0):
+                    visited.add((nx, ny))
+                    q.append(((nx, ny), path + [(nx, ny)]))
+        return None
+
+    def _free_space_around(self, x, y, radius=2):
+        """ Returns True if the cell is at least `radius` distance away from obstacles. """
+        for dx in range(-radius, radius+1):
+            for dy in range(-radius, radius+1):
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < self.env.map.shape[0] and 0 <= ny < self.env.map.shape[1]:
+                    if self.env.map[nx, ny] == 1:
+                        return False
+        return True
