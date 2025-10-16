@@ -61,7 +61,8 @@ class BugPlanner:
         return (x, y)
 
     def _bresenham(self, start, end):
-        # M-line setup using Bresenham's algorithm
+        ''' M-line setup using Bresenham's algorithm
+            referenced ChatGPT to get algorithm w/ error slope checking '''
         x1, y1 = int(round(start[0,0])), int(round(start[1,0]))
         x2, y2 = int(round(end[0,0])), int(round(end[1,0]))
 
@@ -120,6 +121,7 @@ class BugPlanner:
                     else:
                         prev_pos = path[-2]
                     nextx, nexty = self._get_next_wall_move(prev_pos, path[-1])
+                    state_count += 1
                         #print("Next wall move: ", (nextx, nexty))
                         #print("Path taken: ", path)
                         #print("m_line: ", m_line)
@@ -128,22 +130,26 @@ class BugPlanner:
                         # m_line is reached and leave_point closer than hit_point
                         if m_line_dupe.index(hit_point) < m_line_dupe.index((nextx, nexty)):
                             path.append((nextx,nexty))
-                            state_count += 1
                             self.visited[nextx,nexty] = 1
                             del m_line[:leave_point+1]
                             wall_following = False
                     elif (nextx, nexty) != path[-1]: # m_line not reached, wall_following continues
                         path.append((nextx,nexty))
-                        state_count += 1
                         self.visited[nextx,nexty] = 1
                     else:
                         print("Did not reach goal.")
+                        cost = self.calculateCost(path)
+                        plan_time = time.time() - plan_time
+                        print("States Expanded: %d" % state_count)
+                        print("Cost: %f" % cost)
+                        print("Planning Time: %ss" % plan_time)
                         return np.array(path).T
                 
             else:
                 # travel along the m-line
                 path.append(m_line[0])
                 m_line.pop(0)
+                state_count += 1
 
         print("Reached goal!")
         print("Path taken: ", path)
