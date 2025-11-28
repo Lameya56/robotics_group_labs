@@ -2,45 +2,44 @@ import cv2
 import numpy as np
 
 def main():
-    # 1. Open video capture (0 = default camera, or path to video file)
-    cap = cv2.VideoCapture("data/video.mp4")  # change to "data/video.mp4" if using a file
+    cap = cv2.VideoCapture("data/video.mp4")
 
     if not cap.isOpened():
         print("Error: Could not open video source.")
         return
+    
+    paused = False
+    frame = None
 
     while True:
-        ret, frame = cap.read()
-        if not ret:
-            print("End of stream or error.")
-            break
+        if not paused:
+            ret, frame = cap.read()
+            if not ret:
+                print("End of stream or error.")
+                break
 
-        # TODO: call your processing function here
-        # processed_frame, control_command = process_frame(frame)
-
-        # For now, just show the raw frame:
-        cv2.imshow("Raw Frame", frame)
-
+        # HSV
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        cv2.imshow("HSV", hsv)
 
-        lower1 = np.array([20, 100, 100])
-        upper1 = np.array([30, 255, 255])
-        mask1 = cv2.inRange(hsv, lower1, upper1)
+        lower_yellow = np.array([20, 50, 80])
+        upper_yellow = np.array([35, 255, 255])
+        mask1 = cv2.inRange(hsv, lower_yellow, upper_yellow)
 
         mask = mask1
-        
+
+        # Noise Reduction
         kernel = np.ones((5, 5), np.uint8)
         mask_clean = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
         mask_clean = cv2.morphologyEx(mask_clean, cv2.MORPH_CLOSE, kernel)
+
+        # Conntours
         contours, hierarchy = cv2.findContours(mask_clean, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        cv2.imshow("Mask", mask)
-
         result = cv2.bitwise_and(frame, frame, mask=mask)
-        cv2.imshow("Segmented Object", result)
 
-         if contours:
+        tracked_frame = frame.copy()
+
+        if contours:
             largest = max(contours, key=cv2.contourArea)
             M = cv2.moments(largest)
             if M["m00"] != 0:
@@ -50,15 +49,31 @@ def main():
                 cx, cy = None, None
 
             # Create a copy for drawing
-            tracked_frame = frame.copy()
             cv2.drawContours(tracked_frame, [largest], -1, (0, 255, 0), 2)
 
             if cx and cy:
                 cv2.circle(tracked_frame, (cx, cy), 5, (0, 0, 255), -1)
-            cv2.imshow("Tracked Object", tracked_frame)
+
+        # Display all frames
+        cv2.imshow('Raw Frame - Press SPACE to pause, Q to quit', frame)
+        cv2.imshow('HSV Frame', hsv)
+        cv2.imshow("Mask", mask)
+        cv2.imshow("Cleaned Mask", mask_clean)
+        cv2.imshow("Segmented Object", result)
+        cv2.imshow("Tracked Object", tracked_frame)
+
+        key = cv2.waitKey(1) & 0xFF
+
+        # Hit "Space" key to pause the video
+        if key == ord(' '):
+            paused = not paused
+            if paused:
+                print("Video paused - press SPACE to resume")
+                # Optionally save the frame when paused
+                print("Frame saved as 'captured_frame.jpg'")
 
         # Exit on 'q' key
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        elif key == ord('q'):
             break
 
     cap.release()
