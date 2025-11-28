@@ -28,12 +28,8 @@ def main():
         upper1 = np.array([30, 255, 255])
         mask1 = cv2.inRange(hsv, lower1, upper1)
 
-        lower2 = np.array([20, 100, 100])
-        upper2 = np.array([30, 255, 255])
-        mask2 = cv2.inRange(hsv, lower2, upper2)
-
-        mask = mask1 | mask2
-
+        mask = mask1
+        
         kernel = np.ones((5, 5), np.uint8)
         mask_clean = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
         mask_clean = cv2.morphologyEx(mask_clean, cv2.MORPH_CLOSE, kernel)
