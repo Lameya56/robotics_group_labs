@@ -18,7 +18,7 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer=name,
+    maintainer= 'lameya',
     maintainer_email='email',
     description='Lab 5: SLAM + Nav2 (TurtleBot3 only)',
     license='MIT',
