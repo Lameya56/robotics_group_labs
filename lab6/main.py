@@ -7,11 +7,12 @@ import os
 
 def main():
     # --- Configuration ---
-    video_path = "data/video.mp4"
+    video_path = "data/dim_lighting.mp4"
+    test_name = "dim_lighting"
     save_annotated_video = True   # set False if you don't want an output video
-    annotated_filename = "annotated_output.mp4"
-    results_csv = "results_log.csv"
-    cx_plot_png = "cx_over_time.png"
+    annotated_filename = f"annotated_output_{test_name}.mp4"
+    results_csv = f"results_log_{test_name}.csv"
+    cx_plot_png = f"cx_over_time_{test_name}.png"
 
     cap = cv2.VideoCapture(video_path)
 
@@ -199,5 +200,9 @@ def main():
     plt.show()
     print(f"Saved cx plot: {plot_path}")
 
+  
+
+
 if __name__ == "__main__":
     main()
+
