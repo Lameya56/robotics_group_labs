@@ -103,7 +103,7 @@ python3 run.py -m map3.txt -p rrt -s 0 0 -g 18 18 --eta 1.5 --bias 0.05
 python3 run.py -m map3.txt -p prm -s 0 0 -g 18 18 --num_samples 200 --num_neighbors 8
 
 ### Potential
-python3 run.py -m map3.txt -p potentialgraph -s 0 0 -g 18 18
+python3 run.py -m map3.txt -p potentialfields -s 0 0 -g 18 18
 
 ### Visibility
 python3 run.py -m map3.txt -p visibilitygraph -s 0 0 -g 18 18
@@ -131,7 +131,7 @@ python3 run.py -m map4.txt -p rrt -s 1 1 -g 500 501 --eta 10 --bias 0.1
 python3 run.py -m map4.txt -p prm -s 1 1 -g 500 501 --num_samples 1000 --num_neighbors 15
 
 ### Potential
-python3 run.py -m map4.txt -p potentialgraph -s 1 1 -g 500 501
+python3 run.py -m map4.txt -p potentialfields -s 1 1 -g 500 501
 
 ### Visibility
 python3 run.py -m map4.txt -p visibilitygraph -s 1 1 -g 500 501
@@ -159,7 +159,7 @@ python3 run.py -m map5.txt -p rrt -s 1 1 -g 24 24 --eta 2 --bias 0.05
 python3 run.py -m map5.txt -p prm -s 1 1 -g 24 24 --num_samples 200 --num_neighbors 8
 
 ### Potential
-python3 run.py -m map5.txt -p potentialgraph -s 1 1 -g 24 24
+python3 run.py -m map5.txt -p potentialfields -s 1 1 -g 24 24
 
 ### Visibility
 python3 run.py -m map5.txt -p visibilitygraph -s 1 1 -g 24 24
@@ -187,7 +187,7 @@ python3 run.py -m map6.txt -p rrt -s 5 79 -g 200 130 --eta 5 --bias 0.1
 python3 run.py -m map6.txt -p prm -s 5 79 -g 200 130 --num_samples 800 --num_neighbors 12
 
 ### Potential
-python3 run.py -m map6.txt -p potentialgraph -s 5 79 -g 200 130
+python3 run.py -m map6.txt -p potentialfields -s 5 79 -g 200 130
 
 ### Visibility
 python3 run.py -m map6.txt -p visibilitygraph -s 5 79 -g 200 130
