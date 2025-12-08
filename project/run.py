@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from MapEnvironment import MapEnvironment
-from AStarPlanner import AStarPlanner
+from AStarPlanner import ThetaStarPlanner
 import speech_recognition as sr
 
 r = sr.Recognizer()
@@ -67,6 +67,7 @@ if __name__ == "__main__":
         "map one" : ["map1.txt", [0.0, 0.0], [8.0, 8.0]],
         "map two" : ["map2.txt", [321.0, 148.0], [106.0, 202.0]],
         "map three" : ["map3.txt", [0.0, 0.0], [18.0, 18.0]],
+        "map four" : ["map4.txt", [2.0, 2.0], [22.0, 22.0]], # Map with noticable difference
     }
 
     map_details = speech_to_map[text2]
