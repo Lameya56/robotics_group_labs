@@ -8,6 +8,7 @@ class ThetaStarPlanner(object):
         self.nodes = {}
         self.epsilon = epsilon
         self.visited = np.zeros(self.env.map.shape)
+        self.shortcuts_taken = 0
 
     def line_of_sight(self, start, end):
         """Check if there's a clear line of sight between two points using Bresenham's algorithm"""
@@ -86,18 +87,33 @@ class ThetaStarPlanner(object):
                     # Theta* any-angle path check
                     parent_current = parents[current]
 
+                    # Try path through parent if line of sight exists
                     if parent_current is not None and self.line_of_sight(parent_current, neighbor):
-                        # Path 2: Connect neighbor directly to parent of current
+                        # Path 1: Connect neighbor directly to parent of current (any-angle)
                         parent_config = np.array(parent_current).reshape((2, 1))
-                        new_cost = g_values[parent_current] + self.env.compute_distance(parent_config, neighbor_config)
+                        new_cost_parent = g_values[parent_current] + self.env.compute_distance(parent_config, neighbor_config)
 
-                        if neighbor not in g_values or new_cost < g_values[neighbor]:
-                            g_values[neighbor] = new_cost
-                            f = new_cost + self.epsilon * self.env.h(neighbor_config)
-                            heapq.heappush(frontier, (f, new_cost, neighbor))
-                            parents[neighbor] = parent_current
+                        # Path 2: Standard A* connection through current
+                        new_cost_current = g + self.env.compute_distance(current_config, neighbor_config)
+
+                        # Choose the better path
+                        if new_cost_parent < new_cost_current:
+                            # Use parent path (any-angle shortcut)
+                            if neighbor not in g_values or new_cost_parent < g_values[neighbor]:
+                                g_values[neighbor] = new_cost_parent
+                                f = new_cost_parent + self.epsilon * self.env.h(neighbor_config)
+                                heapq.heappush(frontier, (f, new_cost_parent, neighbor))
+                                parents[neighbor] = parent_current
+                                self.shortcuts_taken += 1
+                        else:
+                            # Use current path
+                            if neighbor not in g_values or new_cost_current < g_values[neighbor]:
+                                g_values[neighbor] = new_cost_current
+                                f = new_cost_current + self.epsilon * self.env.h(neighbor_config)
+                                heapq.heappush(frontier, (f, new_cost_current, neighbor))
+                                parents[neighbor] = current
                     else:
-                        # Path 1: Standard A* connection through current
+                        # No line of sight, use standard A* connection through current
                         new_cost = g + self.env.compute_distance(current_config, neighbor_config)
 
                         if neighbor not in g_values or new_cost < g_values[neighbor]:
@@ -122,5 +138,6 @@ class ThetaStarPlanner(object):
         print("States Expanded: %d" % state_count)
         print("Cost: %f" % cost)
         print("Planning Time: %ss" % plan_time)
+        print("Shortcuts Taken: %d" % self.shortcuts_taken)
 
         return plan

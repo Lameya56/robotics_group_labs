@@ -66,7 +66,9 @@ if __name__ == "__main__":
         "map one": ["map1.txt", [0.0, 0.0], [8.0, 8.0]],
         "map two": ["map2.txt", [321.0, 148.0], [106.0, 202.0]],
         "map three": ["map3.txt", [0.0, 0.0], [18.0, 18.0]],
-        "map four": ["map4.txt", [2.0, 2.0], [22.0, 22.0]],
+        "similar": ["map4.txt", [2.0, 2.0], [22.0, 22.0]],
+        "different" : ["map800.txt", [1.0,1.0],[795.0, 795.0]],
+        "test map" : ["map_showcase.txt", [2.0,2.0],[97.0,97.0]]
     }
 
     if text2 not in speech_to_map:
@@ -89,9 +91,9 @@ if __name__ == "__main__":
         exit(0)
 
     speech_to_value = {
-        "one": 1,
-        "two": 2,
-        "three": 3,
+        "number one": 1,
+        "number two": 2,
+        "number three": 3,
     }
 
     if text3 not in speech_to_value:
@@ -115,12 +117,12 @@ if __name__ == "__main__":
     planning_env = MapEnvironment(map_file, start, goal)
 
     # ---- Create Planner ----
-    if "theta" in text4:
-        planner = ThetaStarPlanner(planning_env, epsilon)
-        planner_type = "thetastar"
-    else:
+    if "star" in text4:
         planner = AStarPlanner(planning_env, epsilon)
         planner_type = "astar"
+    else:
+        planner = ThetaStarPlanner(planning_env, epsilon)
+        planner_type = "thetastar"
 
     # ---- Run ----
     main(planning_env, planner, start, goal, planner_type)
