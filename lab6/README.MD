@@ -8,25 +8,25 @@ pip install -r requirements.txt
 <h2>How to Run the Code</h2>
 1. Using a Video File located in Data folder:
 - Modify main.py on lines 17-19:
-
+<br>
 > video_path = "data/your_video.mp4"
 >
 >test_name = "your_test_name"
 >
 >save_annotated_video = True
-
+<br>
 2. Using a Live Webcam: 
 - Modify main.py on line 31:
-
+<br>
 >cap = cv2.VideoCapture(0)
-
+<br>
 - Comment out main.py line 17
-
+<br>
 <h2>How to Switch TARGET_CLASS_ID for MobileNet-SSD</h2>
 - Modify TARGET_CLASS_ID in main.py on line 10:
-
+<br>
 >TARGET_CLASS_ID = 5  # # class ID for 'bottle'
-
+<br>
 Valid TARGET_CLASS_ID ranges from 0-20:
 | Class ID | Object Class | Class ID | Object Class |
 |----------|--------------|----------|--------------|
