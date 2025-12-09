@@ -53,7 +53,18 @@ if __name__ == "__main__":
 
     # ---- Choose Map ----
     with sr.Microphone() as source:
-        print("Which map? Say: map one, map two, map three, or map four")
+        print("Which map?")
+        print("Options: ")
+        print("Map Number 1")
+        print("Map Number 2")
+        print("Map Number 3")
+        print("Map Number 4")
+        print("Map Number 5")
+        print("Map Number 6")
+        print("Map Number 7")
+        print("Map Number 8")
+        print("Map Number 9")
+
         audio = r.listen(source)
 
     try:
@@ -63,12 +74,15 @@ if __name__ == "__main__":
         exit(0)
 
     speech_to_map = {
-        "map one": ["map1.txt", [0.0, 0.0], [8.0, 8.0]],
-        "map two": ["map2.txt", [321.0, 148.0], [106.0, 202.0]],
-        "map three": ["map3.txt", [0.0, 0.0], [18.0, 18.0]],
-        "similar": ["map4.txt", [2.0, 2.0], [22.0, 22.0]],
-        "different" : ["map800.txt", [1.0,1.0],[795.0, 795.0]],
-        "test map" : ["map_showcase.txt", [2.0,2.0],[97.0,97.0]]
+        "map number one": ["map1.txt", [0.0, 0.0], [8.0, 8.0]],
+        "map number two": ["map2.txt", [321.0, 148.0], [106.0, 202.0]],
+        "map number three": ["map3.txt", [0.0, 0.0], [18.0, 18.0]],
+        "map number four": ["map4.txt", [2.0, 2.0], [22.0, 22.0]],
+        "map number five": ["map5.txt", [1.0, 1.0], [795.0, 795.0]],
+        "map number six": ["map6.txt", [2.0, 2.0], [97.0, 97.0]],
+        "map number seven": ["map7.txt", [1.0, 1.0], [28.0, 28.0]],
+        "map number eight": ["map8.txt", [2.0, 2.0], [27.0, 27.0]],
+        "map number nine": ["map9.txt", [0.0, 0.0], [799.0, 799.0]]
     }
 
     if text2 not in speech_to_map:
@@ -81,7 +95,10 @@ if __name__ == "__main__":
 
     # ---- Choose Epsilon ----
     with sr.Microphone() as source:
-        print("Say epsilon value: one, two, or three")
+        print("Say epsilon value. Options :")
+        print("Number One for 1")
+        print("Number Two for 2")
+        print("Number Three for 3")
         audio = r.listen(source)
 
     try:
@@ -104,7 +121,9 @@ if __name__ == "__main__":
 
     # ---- Choose Planner ----
     with sr.Microphone() as source:
-        print("Which planner? Say 'astar' or 'theta star'")
+        print("Which planner?")
+        print("Say 'Number 1' for Astar")
+        print("Say 'Number 2' for Theta")
         audio = r.listen(source)
 
     try:
@@ -117,7 +136,7 @@ if __name__ == "__main__":
     planning_env = MapEnvironment(map_file, start, goal)
 
     # ---- Create Planner ----
-    if "star" in text4:
+    if "one" in text4:
         planner = AStarPlanner(planning_env, epsilon)
         planner_type = "astar"
     else:
