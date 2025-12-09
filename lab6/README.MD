@@ -1,26 +1,29 @@
+
 <h1>Lab Report</h1>
 https://docs.google.com/document/d/17FS_6bGWh9pmp1LpHMu_oumwGzT8tCWpS5gHNZDOLcg/edit?tab=t.0
 
 <h2>Dependencies</h2>
-Install required Python packages:
+Install required Python packages: <br>
 pip install -r requirements.txt
 
 <h2>How to Run the Code</h2>
-1. Using a Video File located in Data folder:
+1. Using a Video File located in Data folder: <br>
 - Modify main.py on lines 17-19:
->
+
 > video_path = "data/your_video.mp4"
 >
 >test_name = "your_test_name"
 >
 >save_annotated_video = True
->
-2. Using a Live Webcam: 
+
+<br>
+2. Using a Live Webcam: <br>
 - Modify main.py on line 31:
->
+
 >cap = cv2.VideoCapture(0)
->
-- Comment out main.py line 17
+
+- Comment out main.py line 18:
+>video_path = "data/your_video.mp4"
 
 <h2>How to Switch TARGET_CLASS_ID for MobileNet-SSD</h2>
 - Modify TARGET_CLASS_ID in main.py on line 10:
@@ -42,6 +45,3 @@ Valid TARGET_CLASS_ID ranges from 0-20:
 | 8 | cat | 19 | train |
 | 9 | chair | 20 | tvmonitor |
 | 10 | cow | | |
-
-
-
